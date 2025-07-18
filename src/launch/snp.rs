@@ -12,7 +12,7 @@ use crate::{
 };
 
 use std::{marker::PhantomData, os::unix::io::AsRawFd, result::Result};
-
+use kvm_ioctls::VmFd;
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
@@ -26,32 +26,16 @@ pub struct Started;
 
 /// Facilitates the correct execution of the SEV launch process.
 #[derive(Debug)]
-pub struct Launcher<T, U: AsRawFd, V: AsRawFd> {
-    vm_fd: U,
+pub struct Launcher<T, V: AsRawFd> {
     sev: V,
     state: PhantomData<T>,
 }
 
-impl<T, U: AsRawFd, V: AsRawFd> AsRef<U> for Launcher<T, U, V> {
-    /// Give access to the vm fd to create vCPUs or such.
-    fn as_ref(&self) -> &U {
-        &self.vm_fd
-    }
-}
-
-impl<T, U: AsRawFd, V: AsRawFd> AsMut<U> for Launcher<T, U, V> {
-    /// Give access to the vm fd to create vCPUs or such.
-    fn as_mut(&mut self) -> &mut U {
-        &mut self.vm_fd
-    }
-}
-
-impl<U: AsRawFd, V: AsRawFd> Launcher<New, U, V> {
+impl<U: AsRawFd, V: AsRawFd> Launcher<New, V> {
     /// Begin the SEV-SNP launch process by creating a Launcher and issuing the
     /// KVM_SNP_INIT ioctl.
-    pub fn new(vm_fd: U, sev: V) -> Result<Self, FirmwareError> {
+    pub fn new(vm_fd: &mut VmFd, sev: V) -> Result<Self, FirmwareError> {
         let mut launcher = Launcher {
-            vm_fd,
             sev,
             state: PhantomData,
         };
@@ -61,23 +45,22 @@ impl<U: AsRawFd, V: AsRawFd> Launcher<New, U, V> {
         let mut cmd = Command::from(&launcher.sev, &init);
 
         INIT2
-            .ioctl(&mut launcher.vm_fd, &mut cmd)
+            .ioctl(vm_fd, &mut cmd)
             .map_err(|_| cmd.encapsulate())?;
 
         Ok(launcher)
     }
 
     /// Initialize the flow to launch a guest.
-    pub fn start(mut self, start: Start) -> Result<Launcher<Started, U, V>, FirmwareError> {
+    pub fn start(mut self, start: Start,  vm_fd: &mut VmFd) -> Result<Launcher<Started, V>, FirmwareError> {
         let launch_start = LaunchStart::from(start);
         let mut cmd = Command::from(&self.sev, &launch_start);
 
         SNP_LAUNCH_START
-            .ioctl(&mut self.vm_fd, &mut cmd)
+            .ioctl(vm_fd, &mut cmd)
             .map_err(|_| cmd.encapsulate())?;
 
         let launcher = Launcher {
-            vm_fd: self.vm_fd,
             sev: self.sev,
             state: PhantomData,
         };
@@ -86,11 +69,12 @@ impl<U: AsRawFd, V: AsRawFd> Launcher<New, U, V> {
     }
 }
 
-impl<U: AsRawFd, V: AsRawFd> Launcher<Started, U, V> {
+impl<V: AsRawFd> Launcher<Started, V> {
     /// Encrypt guest SNP data.
     pub fn update_data(
         &mut self,
         mut update: Update,
+        vm_fd: &mut VmFd,
         // gpa: u64,
         // gpa_len: u64,
     ) -> Result<(), FirmwareError> {
@@ -99,14 +83,14 @@ impl<U: AsRawFd, V: AsRawFd> Launcher<Started, U, V> {
             let mut cmd = Command::from(&self.sev, &launch_update_data);
 
             // Register the encryption region
-            KvmEncRegion::new(update.uaddr).register(&mut self.vm_fd)?;
+            KvmEncRegion::new(update.uaddr).register(vm_fd)?;
 
             // Set memory attributes to private
             // KvmSetMemoryAttributes::new(gpa, gpa_len, KVM_MEMORY_ATTRIBUTE_PRIVATE)
             //     .set_attributes(&mut self.vm_fd)?;
 
             // Perform the SNP_LAUNCH_UPDATE ioctl call
-            match SNP_LAUNCH_UPDATE.ioctl(&mut self.vm_fd, &mut cmd) {
+            match SNP_LAUNCH_UPDATE.ioctl(vm_fd, &mut cmd) {
                 Ok(_) => {
                     // Check if the entire range has been processed
                     if launch_update_data.len == 0 {
@@ -137,15 +121,15 @@ impl<U: AsRawFd, V: AsRawFd> Launcher<Started, U, V> {
     }
 
     /// Complete the SNP launch process.
-    pub fn finish(mut self, finish: Finish) -> Result<(U, V), FirmwareError> {
+    pub fn finish(mut self, finish: Finish, vm_fd: &mut VmFd) -> Result<(V), FirmwareError> {
         let launch_finish = LaunchFinish::from(finish);
         let mut cmd = Command::from(&self.sev, &launch_finish);
 
         SNP_LAUNCH_FINISH
-            .ioctl(&mut self.vm_fd, &mut cmd)
+            .ioctl(vm_fd, &mut cmd)
             .map_err(|_| cmd.encapsulate())?;
 
-        Ok((self.vm_fd, self.sev))
+        Ok((self.sev))
     }
 }
 

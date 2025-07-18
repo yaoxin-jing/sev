@@ -68,13 +68,13 @@ fn snp_launch_test() {
     };
 
     let sev = Firmware::open().unwrap();
-    let launcher = Launcher::new(vm_fd, sev).unwrap();
+    let launcher = Launcher::new(&mut vm_fd, sev).unwrap();
 
     let mut policy = GuestPolicy(0);
     policy.set_smt_allowed(true);
     let start = Start::new(policy, [0; 16]);
 
-    let mut launcher = launcher.start(start).unwrap();
+    let mut launcher = launcher.start(start, &mut vm_fd, ).unwrap();
 
     let update = Update::new(
         mem_region.guest_phys_addr >> 12,
@@ -83,7 +83,7 @@ fn snp_launch_test() {
     );
 
     launcher
-        .update_data(update, mem_region.guest_phys_addr, mem_region.memory_size)
+        .update_data(update, &mut vm_fd)
         .unwrap();
 
     let finish = Finish::new(None, None, [0u8; 32]);
@@ -100,7 +100,7 @@ fn snp_launch_test() {
     sregs.cs.selector = 0;
     vcpu_fd.set_sregs(&sregs).unwrap();
 
-    let (_vm_fd, _sev) = launcher.finish(finish).unwrap();
+    let (_vm_fd, _sev) = launcher.finish(finish, &mut vm_fd).unwrap();
 
     let ret = vcpu_fd.run();
 
