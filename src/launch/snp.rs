@@ -17,12 +17,15 @@ use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
 /// Launcher type-state that indicates a brand new launch.
+#[derive(Debug)]
 pub struct New;
 
-/// Launcher type-state that indicates a SNP in-progress.
+/// Launcher type-state that indicates a SNP in-progress.\
+#[derive(Debug)]
 pub struct Started;
 
 /// Facilitates the correct execution of the SEV launch process.
+#[derive(Debug)]
 pub struct Launcher<T, U: AsRawFd, V: AsRawFd> {
     vm_fd: U,
     sev: V,
