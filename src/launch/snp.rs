@@ -35,7 +35,7 @@ impl<V: AsRawFd> Launcher<New, V> {
     /// Begin the SEV-SNP launch process by creating a Launcher and issuing the
     /// KVM_SNP_INIT ioctl.
     pub fn new(vm_fd: &mut VmFd, sev: V) -> Result<Self, FirmwareError> {
-        let mut launcher = Launcher {
+        let launcher = Launcher {
             sev,
             state: PhantomData,
         };
@@ -52,7 +52,7 @@ impl<V: AsRawFd> Launcher<New, V> {
     }
 
     /// Initialize the flow to launch a guest.
-    pub fn start(mut self, start: Start,  vm_fd: &mut VmFd) -> Result<Launcher<Started, V>, FirmwareError> {
+    pub fn start(self, start: Start,  vm_fd: &mut VmFd) -> Result<Launcher<Started, V>, FirmwareError> {
         let launch_start = LaunchStart::from(start);
         let mut cmd = Command::from(&self.sev, &launch_start);
 

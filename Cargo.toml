@@ -71,11 +71,12 @@ base64 = "0.22.1"
 rdrand = { version = "^0.8", optional = true }
 reqwest = { version = "^0.12", features = ["blocking"], optional = true }
 tokio = { version = "1.29.1", features = ["rt-multi-thread"], optional = true }
-kvm-ioctls = ">=0.16"
+kvm-ioctls = { git = "https://github.com/123abcpp/kvm-ioctls.git",branch = "sev_snp" }
 
 [target.'cfg(target_os = "linux")'.dev-dependencies]
-kvm-ioctls = ">=0.16"
-kvm-bindings = "^0.11"
+kvm-ioctls = { git = "https://github.com/123abcpp/kvm-ioctls.git",branch = "sev_snp" }
+kvm-bindings ={ git = "https://github.com/123abcpp/kvm-bindings.git",branch = "quark", features = ["fam-wrappers"] }
 
 [dev-dependencies]
 serial_test = "3.0"
+kvm-bindings ={ git = "https://github.com/123abcpp/kvm-bindings.git",branch = "quark", features = ["fam-wrappers"] }

@@ -853,20 +853,17 @@ dependencies = [
 
 [[package]]
 name = "kvm-bindings"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b13baf7bdfda2e10bcb109fcb099ef40cff82374eb6b7cdcf4695bdec4e522c"
+version = "0.5.0"
+source = "git+https://github.com/123abcpp/kvm-bindings.git?branch=quark#b6e246834a64aae8720585c862416457b90ca3e7"
 dependencies = [
  "vmm-sys-util",
 ]
 
 [[package]]
 name = "kvm-ioctls"
-version = "0.21.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "083c460d5a272c2f22205973e319147b791d92a288d7d7a8d4c6194f95229440"
+version = "0.11.0"
+source = "git+https://github.com/123abcpp/kvm-ioctls.git?branch=sev_snp#712e037b558f475d989e18878e9a3bbe7c394682"
 dependencies = [
- "bitflags 2.9.0",
  "kvm-bindings",
  "libc",
  "vmm-sys-util",
