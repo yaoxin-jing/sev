@@ -31,7 +31,7 @@ pub struct Launcher<T, V: AsRawFd> {
     state: PhantomData<T>,
 }
 
-impl<U: AsRawFd, V: AsRawFd> Launcher<New, V> {
+impl<V: AsRawFd> Launcher<New, V> {
     /// Begin the SEV-SNP launch process by creating a Launcher and issuing the
     /// KVM_SNP_INIT ioctl.
     pub fn new(vm_fd: &mut VmFd, sev: V) -> Result<Self, FirmwareError> {
