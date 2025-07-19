@@ -121,7 +121,7 @@ impl<V: AsRawFd> Launcher<Started, V> {
     }
 
     /// Complete the SNP launch process.
-    pub fn finish(mut self, finish: Finish, vm_fd: &mut VmFd) -> Result<(V), FirmwareError> {
+    pub fn finish(self, finish: Finish, vm_fd: &mut VmFd) -> Result<V, FirmwareError> {
         let launch_finish = LaunchFinish::from(finish);
         let mut cmd = Command::from(&self.sev, &launch_finish);
 
@@ -129,7 +129,7 @@ impl<V: AsRawFd> Launcher<Started, V> {
             .ioctl(vm_fd, &mut cmd)
             .map_err(|_| cmd.encapsulate())?;
 
-        Ok((self.sev))
+        Ok(self.sev)
     }
 }
 
