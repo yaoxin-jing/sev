@@ -8,7 +8,7 @@
 
 #[cfg(target_os = "linux")]
 #[cfg(any(feature = "sev", feature = "snp"))]
-mod linux;
+pub mod linux;
 
 #[cfg(feature = "sev")]
 pub mod sev;

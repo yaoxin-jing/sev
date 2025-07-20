@@ -75,8 +75,8 @@ impl<V: AsRawFd> Launcher<Started, V> {
         &mut self,
         mut update: Update,
         vm_fd: &mut VmFd,
-        gpa: u64,
-        gpa_len: u64,
+        // gpa: u64,
+        // gpa_len: u64,
     ) -> Result<(), FirmwareError> {
         loop {
             let launch_update_data = LaunchUpdate::from(update);
@@ -86,8 +86,8 @@ impl<V: AsRawFd> Launcher<Started, V> {
             KvmEncRegion::new(update.uaddr).register(vm_fd)?;
 
             // Set memory attributes to private
-            KvmSetMemoryAttributes::new(gpa, gpa_len, KVM_MEMORY_ATTRIBUTE_PRIVATE)
-                .set_attributes(vm_fd)?;
+            // KvmSetMemoryAttributes::new(gpa, gpa_len, KVM_MEMORY_ATTRIBUTE_PRIVATE)
+            //     .set_attributes(vm_fd)?;
 
             // Perform the SNP_LAUNCH_UPDATE ioctl call
             match SNP_LAUNCH_UPDATE.ioctl(vm_fd, &mut cmd) {

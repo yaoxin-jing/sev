@@ -3,6 +3,8 @@
 //! Operations and types for launching on Linux
 pub(crate) mod ioctl;
 
+pub use ioctl::KvmSetMemoryAttributes;
+
 #[cfg(feature = "sev")]
 pub(crate) mod sev;
 

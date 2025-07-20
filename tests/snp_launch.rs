@@ -9,6 +9,10 @@ use sev::launch::snp::*;
 use std::os::fd::RawFd;
 use std::slice::from_raw_parts_mut;
 
+
+use sev::launch::linux::KvmSetMemoryAttributes;
+
+
 // one page of `hlt
 const CODE: &[u8; 4096] = &[
     0xf4; 4096 // hlt
@@ -77,6 +81,12 @@ fn snp_launch_test() {
 
     let mut launcher = launcher.start(start, &mut vm_fd, ).unwrap();
 
+
+    pub const KVM_MEMORY_ATTRIBUTE_PRIVATE: u64 = 1 << 3;
+    KvmSetMemoryAttributes::new(mem_region.guest_phys_addr, mem_region.memory_size, KVM_MEMORY_ATTRIBUTE_PRIVATE)
+    .set_attributes(&mut vm_fd).unwrap();
+
+
     let update = Update::new(
         mem_region.guest_phys_addr >> 12,
         address_space,
@@ -84,7 +94,7 @@ fn snp_launch_test() {
     );
 
     launcher
-    .update_data(update, &mut vm_fd, mem_region.guest_phys_addr, mem_region.memory_size)
+    .update_data(update, &mut vm_fd)
     .unwrap();
 
     // launcher
