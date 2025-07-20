@@ -9,14 +9,13 @@ use sev::launch::snp::*;
 use std::os::fd::RawFd;
 use std::slice::from_raw_parts_mut;
 
-pub const KVM_MEM_GUEST_MEMFD: u32 = 4;
-
 // one page of `hlt
 const CODE: &[u8; 4096] = &[
     0xf4; 4096 // hlt
 ];
 
 const KVM_X86_SNP_VM: u64 = 4;
+const KVM_MEM_GUEST_MEMFD: u32 = 4;
 
 #[cfg_attr(not(host), ignore)]
 #[test]
@@ -59,7 +58,7 @@ fn snp_launch_test() {
         guest_phys_addr: 0x1000_u64,
         memory_size: 0x1000_u64,
         userspace_addr,
-        gmem_offset: 0, 
+        gmem_offset: 0,
         gmem_fd: fd as u32,
         pad1: 0,
         pad2: [0; 14],
@@ -85,8 +84,12 @@ fn snp_launch_test() {
     );
 
     launcher
-        .update_data(update, &mut vm_fd)
-        .unwrap();
+    .update_data(update, &mut vm_fd, mem_region.guest_phys_addr, mem_region.memory_size)
+    .unwrap();
+
+    // launcher
+    //     .update_data(update, &mut vm_fd)
+    //     .unwrap();
 
     let finish = Finish::new(None, None, [0u8; 32]);
 
