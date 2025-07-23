@@ -79,7 +79,7 @@ fn snp_launch_test() {
     policy.set_smt_allowed(true);
     let start = Start::new(policy, [0; 16]);
 
-    let mut launcher = launcher.start(start, &mut vm_fd, ).unwrap();
+    let mut launcher = launcher.start(start, &mut vm_fd).unwrap();
 
 
     pub const KVM_MEMORY_ATTRIBUTE_PRIVATE: u64 = 1 << 3;
