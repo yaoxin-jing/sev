@@ -2,7 +2,7 @@
 
 #![cfg(all(feature = "snp", target_os = "linux"))]
 
-use kvm_bindings::{kvm_create_guest_memfd, kvm_userspace_memory_region2};
+use kvm_bindings::{kvm_create_guest_memfd, kvm_userspace_memory_region2, KVM_X86_SNP_VM, KVM_MEM_GUEST_MEMFD};
 use kvm_ioctls::{Kvm, VcpuExit};
 use sev::firmware::{guest::GuestPolicy, host::Firmware};
 use sev::launch::snp::*;
@@ -18,8 +18,6 @@ const CODE: &[u8; 4096] = &[
     0xf4; 4096 // hlt
 ];
 
-const KVM_X86_SNP_VM: u64 = 4;
-const KVM_MEM_GUEST_MEMFD: u32 = 4;
 
 #[cfg_attr(not(host), ignore)]
 #[test]
@@ -27,7 +25,7 @@ fn snp_launch_test() {
     let kvm_fd = Kvm::new().unwrap();
 
     // Create VM-fd with SEV-SNP type
-    let mut vm_fd = kvm_fd.create_vm_with_type(KVM_X86_SNP_VM).unwrap();
+    let mut vm_fd = kvm_fd.create_vm_with_type(KVM_X86_SNP_VM as u64).unwrap();
 
     const MEM_ADDR: u64 = 0x1000;
 
@@ -53,7 +51,7 @@ fn snp_launch_test() {
     };
 
     // Create KVM guest_memfd
-    let fd: RawFd = vm_fd.create_guest_memfd(&gmem).unwrap();
+    let fd: RawFd = vm_fd.create_guest_memfd(gmem).unwrap();
 
     // Create memory region
     let mem_region = kvm_userspace_memory_region2 {
@@ -62,8 +60,8 @@ fn snp_launch_test() {
         guest_phys_addr: 0x1000_u64,
         memory_size: 0x1000_u64,
         userspace_addr,
-        gmem_offset: 0,
-        gmem_fd: fd as u32,
+        guest_memfd_offset: 0,
+        guest_memfd: fd as u32,
         pad1: 0,
         pad2: [0; 14],
     };
